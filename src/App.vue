@@ -27,6 +27,9 @@ export default {
       people: [],
     };
   },
+  mounted() {
+    this.loadPeople();
+  },
   methods: {
     async createPerson() {
       const responce = await fetch(
@@ -42,7 +45,11 @@ export default {
         }
       );
       const firebaseData = await responce.json();
-      console.log(firebaseData);
+      // console.log(firebaseData);
+      this.people.push({
+        firstName: this.name,
+        id: firebaseData.name,
+      });
       this.name = "";
     },
     async loadPeople() {
