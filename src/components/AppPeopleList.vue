@@ -1,8 +1,8 @@
 <template>
   <div v-if="people.length !== 0">
-    <div class="card" v-for="person in people" :key="person">
+    <div class="card" v-for="{ id, firstName } in people" :key="id">
       <h3>
-        {{ person }}
+        {{ firstName }}
       </h3>
     </div>
   </div>

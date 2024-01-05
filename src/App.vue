@@ -16,6 +16,8 @@
 
 <script>
 import AppPeopleList from "./components/AppPeopleList.vue";
+import axios from "axios";
+
 export default {
   name: "App",
   components: { AppPeopleList },
@@ -43,7 +45,17 @@ export default {
       console.log(firebaseData);
       this.name = "";
     },
-    loadPeople() {},
+    async loadPeople() {
+      const { data } = await axios.get(
+        "https://vue-with-http-a1483-default-rtdb.europe-west1.firebasedatabase.app/people.json"
+      );
+      this.people = Object.keys(data).map((key) => {
+        return {
+          id: key,
+          ...data[key],
+        };
+      });
+    },
   },
 };
 </script>
