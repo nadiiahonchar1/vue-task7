@@ -10,7 +10,11 @@
         Create a person
       </button>
     </form>
-    <app-people-list :people="people" @load="loadPeople"></app-people-list>
+    <app-people-list
+      :people="people"
+      @load="loadPeople"
+      @remove="removePerson"
+    ></app-people-list>
   </div>
 </template>
 
@@ -53,15 +57,25 @@ export default {
       this.name = "";
     },
     async loadPeople() {
-      const { data } = await axios.get(
-        "https://vue-with-http-a1483-default-rtdb.europe-west1.firebasedatabase.app/people.json"
+      try {
+        const { data } = await axios.get(
+          "https://vue-with-http-a1483-default-rtdb.europe-west1.firebasedatabase.app/people.json"
+        );
+        this.people = Object.keys(data).map((key) => {
+          return {
+            id: key,
+            ...data[key],
+          };
+        });
+      } catch (e) {
+        console.log(e.message);
+      }
+    },
+    async removePerson(id) {
+      await axios.delete(
+        `https://vue-with-http-a1483-default-rtdb.europe-west1.firebasedatabase.app/people/${id}.json`
       );
-      this.people = Object.keys(data).map((key) => {
-        return {
-          id: key,
-          ...data[key],
-        };
-      });
+      this.people = this.people.filter((person) => person.id !== id);
     },
   },
 };
@@ -106,7 +120,7 @@ body {
 .btn {
   display: inline-block;
   min-width: 100px;
-  height: 30px;
+  padding: 5px;
   border-radius: 10px;
   background-color: transparent;
   border: 1px solid #2756a8ad;
@@ -119,20 +133,25 @@ body {
   border: 1px solid red;
 }
 
-.primary {
-  /* color: orange;
-  border: 1px solid orange; */
+.primary,
+.btn:hover {
+  /* color: orange;*/
+  border: 1px solid #2756a8ad;
   background-color: #2756a8ad;
-  border: transparent;
   color: white;
 }
 
-.btn:hover {
+/* .btn:hover {
   border: transparent;
   background-color: rgb(0, 119, 128);
   color: white;
-}
+} */
 [disabled] {
   background-color: #ccc7ba;
+}
+
+.danger:hover {
+  color: rgb(255 151 0);
+  border: 1px solid rgb(255 151 0);
 }
 </style>
