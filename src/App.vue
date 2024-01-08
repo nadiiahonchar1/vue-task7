@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <app-alert :alert="alert" @close="alert = null"></app-alert>
     <form class="card" @submit.prevent="createPerson">
       <h2>Work with the database</h2>
       <div class="form-control">
@@ -10,7 +11,9 @@
         Create a person
       </button>
     </form>
+    <app-loader v-if="loading"></app-loader>
     <app-people-list
+      v-else
       :people="people"
       @load="loadPeople"
       @remove="removePerson"
@@ -19,16 +22,20 @@
 </template>
 
 <script>
-import AppPeopleList from "./components/AppPeopleList.vue";
 import axios from "axios";
+import AppPeopleList from "./components/AppPeopleList.vue";
+import AppAlert from "./components/AppAlert.vue";
+import AppLoader from "./components/AppLoader.vue";
 
 export default {
   name: "App",
-  components: { AppPeopleList },
+  components: { AppPeopleList, AppAlert, AppLoader },
   data() {
     return {
       name: "",
       people: [],
+      alert: null,
+      loading: false,
     };
   },
   mounted() {
@@ -58,24 +65,44 @@ export default {
     },
     async loadPeople() {
       try {
+        this.loading = true;
         const { data } = await axios.get(
           "https://vue-with-http-a1483-default-rtdb.europe-west1.firebasedatabase.app/people.json"
         );
+        if (!data) {
+          throw new Error("List is empty");
+        }
         this.people = Object.keys(data).map((key) => {
           return {
             id: key,
             ...data[key],
           };
         });
+        this.loading = false;
       } catch (e) {
-        console.log(e.message);
+        this.loading = false;
+        this.alert = {
+          type: "danger",
+          title: "ERROR!",
+          text: e.message,
+        };
       }
     },
     async removePerson(id) {
-      await axios.delete(
-        `https://vue-with-http-a1483-default-rtdb.europe-west1.firebasedatabase.app/people/${id}.json`
-      );
-      this.people = this.people.filter((person) => person.id !== id);
+      try {
+        const name = this.people.find((person) => person.id === id).firstName;
+        await axios.delete(
+          `https://vue-with-http-a1483-default-rtdb.europe-west1.firebasedatabase.app/people/${id}.json`
+        );
+        this.people = this.people.filter((person) => person.id !== id);
+        this.alert = {
+          type: "primary",
+          title: "Success!",
+          text: `The user "${name}" has been deleted`,
+        };
+      } catch (e) {
+        console.log(e.message);
+      }
     },
   },
 };
@@ -121,7 +148,7 @@ body {
   display: inline-block;
   min-width: 100px;
   padding: 5px;
-  border-radius: 10px;
+  border-radius: 20px;
   background-color: transparent;
   border: 1px solid #2756a8ad;
   color: #2756a8ad;
